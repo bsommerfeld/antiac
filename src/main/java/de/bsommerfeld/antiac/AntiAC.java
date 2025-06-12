@@ -18,7 +18,6 @@ import de.bsommerfeld.antiac.detection.checks.ClickPatternConsistencyCheck;
 import de.bsommerfeld.antiac.detection.checks.DoubleClickCheck;
 import de.bsommerfeld.antiac.detection.checks.MomentumCheck;
 import de.bsommerfeld.antiac.detection.checks.ScaledCPSCheck;
-import de.godcipher.antiac.detection.checks.*;
 import de.bsommerfeld.antiac.detection.reliability.TPSChecker;
 import de.bsommerfeld.antiac.detection.violation.ViolationTracker;
 import de.bsommerfeld.antiac.hibernate.HibernateUtil;
