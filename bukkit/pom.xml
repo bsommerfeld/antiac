@@ -117,5 +117,11 @@
             <artifactId>yaml</artifactId>
             <version>3.3.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>7.0.0</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
