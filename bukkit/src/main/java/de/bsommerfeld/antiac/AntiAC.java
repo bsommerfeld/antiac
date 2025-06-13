@@ -51,6 +51,7 @@ public final class AntiAC extends JavaPlugin {
         .debug(false)
         .checkForUpdates(false)
         .timeStampMode(TimeStampMode.MILLIS)
+        .bStats(false)
         .reEncodeByDefault(true);
     PacketEvents.getAPI().init();
   }
