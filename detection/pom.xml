@@ -7,6 +7,7 @@
         <groupId>de.bsommerfeld</groupId>
         <artifactId>antiac</artifactId>
         <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>detection</artifactId>

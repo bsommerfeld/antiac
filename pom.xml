@@ -52,6 +52,7 @@
         <module>bukkit</module>
         <module>click</module>
         <module>detection</module>
+        <module>persistence</module>
     </modules>
 
     <build>
