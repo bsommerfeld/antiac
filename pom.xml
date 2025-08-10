@@ -49,10 +49,10 @@
     </properties>
 
     <modules>
-        <module>bukkit</module>
         <module>click</module>
         <module>detection</module>
         <module>persistence</module>
+        <module>bukkit</module>
     </modules>
 
     <build>

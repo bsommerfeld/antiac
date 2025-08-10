@@ -1,8 +1,8 @@
 package de.bsommerfeld.antiac.messages;
 
 import de.bsommerfeld.antiac.AntiAC;
+import de.bsommerfeld.antiac.logging.LogManager;
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,7 +10,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -241,16 +240,26 @@ public class Messages {
      * @param e       The exception, or null if there is no exception
      */
     private static void logError(String message, Exception e) {
-        if (AntiAC.getInstance() != null) {
+        try {
             if (e != null) {
-                AntiAC.getInstance().getLogger().log(Level.SEVERE, message, e);
+                LogManager.error(message, e);
             } else {
-                AntiAC.getInstance().getLogger().log(Level.SEVERE, message);
+                LogManager.error(message);
             }
-        } else {
-            Bukkit.getLogger().log(Level.SEVERE, "[AntiAC] " + message);
-            if (e != null) {
-                e.printStackTrace();
+        } catch (IllegalStateException ex) {
+            // LogManager not initialized yet, fall back to direct logging
+            if (AntiAC.getInstance() != null) {
+                if (e != null) {
+                    AntiAC.getInstance().getLogger().severe(message);
+                    e.printStackTrace();
+                } else {
+                    AntiAC.getInstance().getLogger().severe(message);
+                }
+            } else {
+                System.err.println("[AntiAC] " + message);
+                if (e != null) {
+                    e.printStackTrace();
+                }
             }
         }
     }
