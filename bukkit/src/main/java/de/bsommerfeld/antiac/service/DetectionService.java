@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,8 +43,9 @@ public final class DetectionService {
 
     public void start(long periodTicks) {
         if (task != null) return;
-        task = Bukkit.getScheduler().runTaskTimer(plugin, this::sampleAndCheck, periodTicks, periodTicks);
-        LogManager.info("DetectionService started with periodTicks=" + periodTicks);
+        // Schedule a lightweight synchronous timer that offloads heavy work to an async task each tick
+        task = Bukkit.getScheduler().runTaskTimer(plugin, this::scheduleAsyncSample, periodTicks, periodTicks);
+        LogManager.info("DetectionService started (async processing) with periodTicks=" + periodTicks);
     }
 
     public void stop() {
@@ -54,11 +56,19 @@ public final class DetectionService {
         }
     }
 
-    private void sampleAndCheck() {
-        long now = System.currentTimeMillis();
-        long windowStart = now - collector.getWindowMillis();
+    private void scheduleAsyncSample() {
+        // Capture immutable snapshot of player UUIDs on the main thread
+        List<UUID> playerIds = new ArrayList<>();
         for (Player p : Bukkit.getOnlinePlayers()) {
-            UUID id = p.getUniqueId();
+            playerIds.add(p.getUniqueId());
+        }
+        long now = System.currentTimeMillis();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> processPlayersAsync(playerIds, now));
+    }
+
+    private void processPlayersAsync(List<UUID> playerIds, long now) {
+        long windowStart = now - collector.getWindowMillis();
+        for (UUID id : playerIds) {
             List<Long> timestamps = collector.getWindowTimestamps(id, now);
             FeatureVector fv = extractor.extract(id, timestamps, windowStart, now);
             exporter.append(fv);
