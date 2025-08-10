@@ -72,13 +72,37 @@ public class AntiACModule extends AbstractModule {
   @Provides
   @Singleton
   CheckManager provideCheckManager() {
+    // Load thresholds from configuration
     double highCps = config.getHighCpsThreshold();
-    // Sensible defaults; could be moved to config in future
-    DoubleClickCheck doubleClick = new DoubleClickCheck(3);
-    MomentumCheck momentum = new MomentumCheck(10.0, 0.2, 4.0);
-    CrosshairSteadinessCheck steady = new CrosshairSteadinessCheck(10.0, 0.7);
-    IntervalUniformityCheck uniform = new IntervalUniformityCheck(10.0, 0.15, 12.0);
-    LevelEscalationCheck levels = new LevelEscalationCheck(6, 2, 1, 15.0, 3, 0.15, 0.7);
+
+    DoubleClickCheck doubleClick = new DoubleClickCheck(config.getDoubleClickMinCount());
+
+    MomentumCheck momentum = new MomentumCheck(
+        config.getMomentumMinCps(),
+        config.getMomentumStableDeltaThreshold(),
+        config.getMomentumSpikeDeltaThreshold()
+    );
+
+    CrosshairSteadinessCheck steady = new CrosshairSteadinessCheck(
+        config.getSteadyMinCps(),
+        config.getSteadyMinRatio()
+    );
+
+    IntervalUniformityCheck uniform = new IntervalUniformityCheck(
+        config.getUniformMinCps(),
+        config.getUniformMaxJitterCv(),
+        config.getUniformMaxIqrMillis()
+    );
+
+    LevelEscalationCheck levels = new LevelEscalationCheck(
+        config.getEscalationFlagLevel(),
+        config.getEscalationIncreaseOnHit(),
+        config.getEscalationDecayOnMiss(),
+        config.getEscalationMinCps(),
+        config.getEscalationMinDoubleClicks(),
+        config.getEscalationMaxUniformJitter(),
+        config.getEscalationMinSteadyAim()
+    );
 
     return new CheckManager()
         .add(new HighCpsCheck(highCps))
