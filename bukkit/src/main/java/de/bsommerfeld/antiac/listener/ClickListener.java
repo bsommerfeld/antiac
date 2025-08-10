@@ -6,6 +6,8 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity;
 import com.google.inject.Inject;
 import de.bsommerfeld.antiac.capture.ClickCollector;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
@@ -28,7 +30,15 @@ public final class ClickListener extends PacketListenerAbstract {
             WrapperPlayClientInteractEntity wrapper = new WrapperPlayClientInteractEntity(event);
             if (wrapper.getAction() == WrapperPlayClientInteractEntity.InteractAction.ATTACK) {
                 UUID id = event.getUser().getUUID();
-                collector.recordClick(id, System.currentTimeMillis());
+                long now = System.currentTimeMillis();
+                Player p = Bukkit.getPlayer(id);
+                if (p != null) {
+                    float yaw = p.getLocation().getYaw();
+                    float pitch = p.getLocation().getPitch();
+                    collector.recordClick(id, now, yaw, pitch);
+                } else {
+                    collector.recordClick(id, now);
+                }
             }
         }
     }

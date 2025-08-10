@@ -8,7 +8,12 @@ import de.bsommerfeld.antiac.AntiACConfig;
 import de.bsommerfeld.antiac.capture.ClickCollector;
 import de.bsommerfeld.antiac.command.AntiACCommand;
 import de.bsommerfeld.antiac.detection.CheckManager;
+import de.bsommerfeld.antiac.detection.checks.CrosshairSteadinessCheck;
+import de.bsommerfeld.antiac.detection.checks.DoubleClickCheck;
 import de.bsommerfeld.antiac.detection.checks.HighCpsCheck;
+import de.bsommerfeld.antiac.detection.checks.IntervalUniformityCheck;
+import de.bsommerfeld.antiac.detection.checks.LevelEscalationCheck;
+import de.bsommerfeld.antiac.detection.checks.MomentumCheck;
 import de.bsommerfeld.antiac.detection.features.FeatureExtractor;
 import de.bsommerfeld.antiac.feature.BasicFeatureExtractor;
 import de.bsommerfeld.antiac.listener.ClickListener;
@@ -67,7 +72,20 @@ public class AntiACModule extends AbstractModule {
   @Provides
   @Singleton
   CheckManager provideCheckManager() {
-    double threshold = config.getHighCpsThreshold();
-    return new CheckManager().add(new HighCpsCheck(threshold));
+    double highCps = config.getHighCpsThreshold();
+    // Sensible defaults; could be moved to config in future
+    DoubleClickCheck doubleClick = new DoubleClickCheck(3);
+    MomentumCheck momentum = new MomentumCheck(10.0, 0.2, 4.0);
+    CrosshairSteadinessCheck steady = new CrosshairSteadinessCheck(10.0, 0.7);
+    IntervalUniformityCheck uniform = new IntervalUniformityCheck(10.0, 0.15, 12.0);
+    LevelEscalationCheck levels = new LevelEscalationCheck(6, 2, 1, 15.0, 3, 0.15, 0.7);
+
+    return new CheckManager()
+        .add(new HighCpsCheck(highCps))
+        .add(doubleClick)
+        .add(momentum)
+        .add(steady)
+        .add(uniform)
+        .add(levels);
   }
 }

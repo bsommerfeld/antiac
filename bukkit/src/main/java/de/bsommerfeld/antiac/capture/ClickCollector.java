@@ -12,17 +12,30 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Collects raw click timestamps per player and maintains a rolling window.
+ * Also tracks basic orientation (yaw/pitch) captured at click time for crosshair movement analysis.
  */
 public class ClickCollector {
     private final Map<UUID, ArrayDeque<Long>> clicksByPlayer = new ConcurrentHashMap<>();
+    private final Map<UUID, ArrayDeque<float[]>> orientationByPlayer = new ConcurrentHashMap<>();
     private final long windowMillis;
 
     public ClickCollector(long windowMillis) {
         this.windowMillis = windowMillis;
     }
 
+    /**
+     * Backwards-compatible API recording a click without orientation data.
+     */
     public void recordClick(UUID playerId, long timestampMillis) {
+        recordClick(playerId, timestampMillis, Float.NaN, Float.NaN);
+    }
+
+    /**
+     * Records a click with optional orientation (yaw/pitch in degrees). Use NaN when not available.
+     */
+    public void recordClick(UUID playerId, long timestampMillis, float yaw, float pitch) {
         clicksByPlayer.computeIfAbsent(playerId, id -> new ArrayDeque<>()).addLast(timestampMillis);
+        orientationByPlayer.computeIfAbsent(playerId, id -> new ArrayDeque<>()).addLast(new float[]{yaw, pitch});
         prune(playerId, timestampMillis);
     }
 
@@ -33,12 +46,34 @@ public class ClickCollector {
         return new ArrayList<>(q);
     }
 
+    /**
+     * Returns orientation pairs aligned with timestamps in the current window.
+     */
+    public List<float[]> getWindowOrientations(UUID playerId, long nowMillis) {
+        ArrayDeque<float[]> oq = orientationByPlayer.get(playerId);
+        ArrayDeque<Long> tq = clicksByPlayer.get(playerId);
+        if (oq == null || tq == null || oq.isEmpty() || tq.isEmpty()) return Collections.emptyList();
+        prune(playerId, nowMillis);
+        // After prune, sizes should be aligned; create a copy
+        return new ArrayList<>(oq);
+    }
+
     private void prune(UUID playerId, long nowMillis) {
-        ArrayDeque<Long> q = clicksByPlayer.get(playerId);
-        if (q == null) return;
+        ArrayDeque<Long> tq = clicksByPlayer.get(playerId);
+        ArrayDeque<float[]> oq = orientationByPlayer.get(playerId);
+        if (tq == null) return;
         long cutoff = nowMillis - windowMillis;
-        while (!q.isEmpty() && q.peekFirst() < cutoff) {
-            q.pollFirst();
+        while (!tq.isEmpty() && tq.peekFirst() < cutoff) {
+            tq.pollFirst();
+            if (oq != null && !oq.isEmpty()) {
+                oq.pollFirst();
+            }
+        }
+        // Ensure orientation queue does not exceed timestamps size
+        if (oq != null) {
+            while (oq.size() > tq.size()) {
+                oq.pollFirst();
+            }
         }
     }
 
